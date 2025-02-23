@@ -3,9 +3,12 @@
 // Disclaimer: Only scan networks that you own or have permission to scan.
 $result = "";
 $open_ports = [];
+$scanned_ip = "";
+$client_ip = $_SERVER['REMOTE_ADDR']; // Get the current user's IP address
 
 if (isset($_POST['scan'])) {
     $host = trim($_POST['host']);
+    $scanned_ip = gethostbyname($host); // Resolve the host to its current IP address
     $start_port = (int) $_POST['start_port'];
     $end_port = (int) $_POST['end_port'];
 
@@ -21,7 +24,7 @@ if (isset($_POST['scan'])) {
             // Loop through each port in the specified range
             for ($port = $start_port; $port <= $end_port; $port++) {
                 // Use a short timeout (0.5 seconds) to check the port
-                $connection = @fsockopen($host, $port, $errno, $errstr, 0.5);
+                $connection = @fsockopen($scanned_ip, $port, $errno, $errstr, 0.5);
                 if (is_resource($connection)) {
                     $open_ports[] = $port;
                     fclose($connection);
@@ -52,7 +55,7 @@ if (isset($_POST['scan'])) {
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
-        h1 {
+        h1, h2 {
             text-align: center;
             color: #333;
         }
@@ -79,10 +82,11 @@ if (isset($_POST['scan'])) {
         input[type="submit"]:hover {
             background: #286090;
         }
-        .result, .open-ports {
+        .result, .open-ports, .client-ip, .scanned-ip {
             margin-top: 20px;
             font-size: 16px;
             color: #333;
+            text-align: center;
         }
         .open-ports ul {
             list-style: none;
@@ -99,6 +103,9 @@ if (isset($_POST['scan'])) {
 <body>
 <div class="container">
     <h1>Port Scanner</h1>
+    <div class="client-ip">
+        Your current IP: <?php echo htmlspecialchars($client_ip); ?>
+    </div>
     <form method="post" action="">
         <input type="text" name="host" placeholder="Enter IP or Domain" required>
         <input type="number" name="start_port" placeholder="Start Port" required>
@@ -107,6 +114,9 @@ if (isset($_POST['scan'])) {
     </form>
     <?php if (!empty($result)) : ?>
         <div class="result"><?php echo htmlspecialchars($result); ?></div>
+    <?php endif; ?>
+    <?php if (!empty($scanned_ip)) : ?>
+        <div class="scanned-ip">Scanned Host IP: <?php echo htmlspecialchars($scanned_ip); ?></div>
     <?php endif; ?>
 
     <?php if (isset($open_ports) && count($open_ports) > 0) : ?>
@@ -126,3 +136,4 @@ if (isset($_POST['scan'])) {
 </div>
 </body>
 </html>
+
